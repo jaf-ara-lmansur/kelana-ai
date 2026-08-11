@@ -1,21 +1,51 @@
 
-#def print_trip_summary(destination, days, budget, travel_style):
-   # print("==========")
-   # print("KelanaAI")
-   # print("==========")
-   # print(f"Destination     : {destination}")
-   # print(f"Days            : {days}")
-   # print(f"Budget          : {budget}")
-   # print(f"Style           : {travel_style}")
+def print_trip_summary(destination,
+                       days,
+                       budget,
+                       country,
+                       currency,
+                       travel_month,
+                       hotel = 100,
+                       food = 30,
+                       miscelnous = 50,
+                       transport = 70):
+    print("==========")
+    print("KelanaAI")
+    print("==========")
+    print(f"Destination     : {destination}")
+    print(f"Days            : {days}")
+    print(f"Budget          : {budget}")
+    print(f"Month           : {travel_month}")
+    print(f"Currency        : {currency}")
+    print(f"Country         : {country}")
 
-# call any trip
-#print_trip_summary("Norway", 2, 1500, "Family")
-#print_trip_summary("Bone", 3, 400,"Solo-Mode")
+    fee_hotel=days*hotel
+    fee_food=food*days
+    fee_miscelnous=days*miscelnous
+    fee_transport=days*transport
 
-destination	=input("Destination : ")
-days		=int(input("Days : "))
-budget		=float(input("Budget : "))
-country		=input("Country : ")
-currency	=input("Currency : ")
-travel_month	=input("Travel_month : ")
-travel_style	=input("Travel_style : ")
+    total=fee_food+fee_hotel+fee_miscelnous+fee_transport
+    if total>budget:
+        print("!!!! Budget Exceeded !!!!")
+    else:
+        print("===============")
+        print("Berikut rincian biaya yang anda keluarkan")
+        print("===============")
+        print(f"Hotel            : {fee_hotel}")
+        print(f"Makan             : {fee_food}")
+        print(f"Transport          : {fee_transport}")
+        print(f"Lain-lain           : {fee_miscelnous}")
+        print("===============")
+        print("Enjoy Your Holiday!!")
+        print("===============")
+
+
+print_trip_summary(
+
+destination	   =input("Destination : "),
+country		   =input("Country : "),
+days		      =int(input("Days : ")),
+budget		   =float(input("Budget : ")),
+currency	      =input("Currency : "),
+travel_month	=input("Travel Month : ")
+)
