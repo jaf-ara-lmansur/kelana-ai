@@ -11,10 +11,10 @@ def get_trip_category(budget):
         return "Luxury"
     
 #Trip transportation
-def get_trip_transportation(budget):
-    if budget<1000:
+def get_trip_transportation(travStyle):
+    if travStyle == "backpaker":
         return "Bus"
-    elif budget <= 3000:
+    elif travStyle == "family":
         return "Train"
     else:
         return "Flight"
@@ -44,11 +44,22 @@ recommended_placeKOR=[
     "Gamcheon Culture Village"
 ]
 
-def get_recomenmendations(country):
-    trip_country=country.lower()
+def get_recomenmendations(country: str):
+    trip_country = country.lower()
     if trip_country in ["japan", "jepang"]:
-        for place in recommended_placeJPN:
-            print(f" - {place}")
+        return recommended_placeJPN
+    elif trip_country in ["korea", "korea selatan"]:
+        return recommended_placeKOR
     else:
-        for place in recommended_placeKOR:
-            print(f" - {place}")
+        return []
+
+trasnportation=[
+    "Bus",
+    "Train",
+    "Flight"
+    ]
+def get_all_transportation():
+    return {
+       "transportation": trasnportation
+    }
+    
