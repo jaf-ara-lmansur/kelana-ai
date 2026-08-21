@@ -1,0 +1,6 @@
+.DS_Store
+.env
+backend/.venv
+backend/_pycache_
+backend/services_pycache_
+backend/models/_pycache_

@@ -4,11 +4,11 @@ from pydantic import BaseModel
 from services.trip_service import(
     calculate_daily_budget,
     get_trip_category,
-    get_trip_transportation,
     get_recomenmendations,
     get_all_transportation
 )
-
+from database import init_db, sessionLocal
+from models.trip import Trip
 class TripRequest (BaseModel):
     destination     :str
     days            :int
@@ -16,7 +16,10 @@ class TripRequest (BaseModel):
     travel_style   :str
 #fastApi validate JSON
 
+
 app = FastAPI()
+init_db() 
+
 @app.get("/")
 def home():
     return{
@@ -30,7 +33,7 @@ def health_status():
     }
 
 @app.get("/api/v1/recommendations")
-def recommendations(country: str = "japan"):  # "japan" di sini hanya nilai bawaan (default)
+def recommendations(country: str = "japan"):  #nilai bawaan (default)
     rekom = get_recomenmendations(country)
     return {
         "country": country,
@@ -48,21 +51,21 @@ def transport():
 
 @app.post("/api/v1/trips")
 def create_trip(request: TripRequest):
-    daily_budget=calculate_daily_budget(
-        request.budget, request.days
-    )
-    category=get_trip_category(
-        request.budget
-    )
-    transport=get_trip_transportation(
-        request.travel_style
-    )
 
-    return{
-        "destination"       : request.destination,
-        "budget"            : request.budget,
-        "daily-budget"      : daily_budget,
-        "category"          : category,
-        "transport"         : transport
-    }
-
+    #reuse session 2 busines logic
+    daily_budget = calculate_daily_budget(request.budget,request.days)
+    category = get_trip_category(request.budget)
+    trip=Trip(
+        destination = request.destination,
+        days = request.days,
+        budget = request.budget,
+        category = category,
+        daily_budget = daily_budget
+    )
+    #save to postgreSQL
+    db=sessionLocal() 
+    db.add(trip)
+    db.commit()
+    db.refresh(trip) #get auto gerated id
+    db.close()
+    return trip
