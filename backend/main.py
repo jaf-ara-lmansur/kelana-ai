@@ -9,6 +9,8 @@ from services.trip_service import(
 )
 from database import init_db, sessionLocal
 from models.trip import Trip
+
+
 class TripRequest (BaseModel):
     destination     :str
     days            :int
@@ -98,23 +100,30 @@ def delete_trip(id: int):
     db.close()
     return {"message": f"Trip with ID {id} has been deleted"}
 
+from fastapi import HTTPException, Depends
+from sqlalchemy.orm import Session
+
 @app.put("/api/v1/trips/{id}")
 def update_trip(id: int, request: TripRequest):
     db = sessionLocal()
-    trip = db.query(Trip).filter(Trip.id == id).first()
-    if trip is None:
+    try:
+        trip = db.query(Trip).filter(Trip.id == id).first()
+        if trip is None:
+            raise HTTPException(status_code=404, detail=f"Trip with ID {id} not found")
+        
+        # 1. Update budget dari request
+        trip.budget = request.budget
+        
+        # 2. Recalculate category berdasarkan budget baru
+        trip.category = get_trip_category(request.budget)
+        
+        # 3. Recalculate daily_budget menggunakan trip.days yang ada di DB
+        trip.daily_budget = calculate_daily_budget(request.budget, trip.days)
+        
+        # 4. Simpan perubahan ke database
+        db.commit()
+        db.refresh(trip)
+        return trip
+
+    finally:
         db.close()
-        raise HTTPException(status_code=404, detail=f"Trip with ID {id} not found")
-    
-    # Update the trip attributes
-    trip.destination = request.destination
-    trip.days = request.days
-    trip.budget = request.budget
-    trip.category = get_trip_category(request.budget)
-    trip.daily_budget = calculate_daily_budget(request.budget, request.days)
-    
-    db.commit()
-    db.refresh(trip)
-    db.close()
-    
-    return trip
