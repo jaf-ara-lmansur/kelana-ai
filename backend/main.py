@@ -1,6 +1,7 @@
 #sesi 3
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from bedrock_service import (get_ai_recommendation)
 from services.trip_service import(
     calculate_daily_budget,
     get_trip_category,
@@ -55,6 +56,18 @@ def transport():
 def create_trip(request: TripRequest):
 
     #reuse session 2 busines logic
+    try:
+        ai_recommendation = get_ai_recommendation(
+            request.days,
+            request.destination,
+            request.budget,
+            request.travel_style,
+        )
+        if not ai_recommendation:
+            ai_recommendation = "rekomendasi tidak ditemukan"
+    except Exception:
+        ai_recommendation = "rekomendasi tidak ditemukan"
+    
     daily_budget = calculate_daily_budget(request.budget,request.days)
     category = get_trip_category(request.budget)
     trip=Trip(
@@ -62,7 +75,8 @@ def create_trip(request: TripRequest):
         days = request.days,
         budget = request.budget,
         category = category,
-        daily_budget = daily_budget
+        daily_budget = daily_budget,
+        ai_recommendation = ai_recommendation
     )
     #save to postgreSQL
     db=sessionLocal()  
