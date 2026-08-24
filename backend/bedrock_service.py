@@ -23,11 +23,25 @@ def configure_bedrock():
 
 def get_ai_recommendation(days, destination, budget, travel_style):
     """Generate a travel itinerary using the configured Bedrock model."""
-    prompt = (
-        "You are an experienced travel planner. "
-        f"Plan a {days} - day itinerary for {destination}. "
-        f"Budget: {budget} Travel Style: {travel_style}"
-    )
+    prompt = prompt = f"""
+    You are an expert travel assistant. Generate a detailed {days}-day itinerary for {destination} with a total budget of ${budget} using a {travel_style} travel style.
+
+    CRITICAL REQUIREMENTS:
+    1. markdown with headers(##) and bullet list (-) every daily itinerary (morning activities : 2-3 activities, afternoon activities : visit cultural sites and trying local experiences, evening activities : dinner and night life), include an estimated cost in USD (e.g., "Breakfast at local warung (~$5)").
+    2. At the VERY END of the response, you MUST provide a "Budget Breakdown" section formatted like this:
+       
+       ---
+       **Budget Breakdown:**
+       - **Accommodation**: Estimated cost
+       - **Food**: Estimated cost
+       - **Transport**: Estimated cost
+       - **Entrance Fees**: Estimated cost
+       - **Miscellaneous**: Estimated cost
+       
+       **Total**: $X (leaving a buffer for unexpected expenses)
+
+    Ensure the total estimated budget strictly fits within ${budget}.
+    """
     model_id = os.getenv("MODEL_ID")
     if not model_id:
         raise ValueError("MODEL_ID is missing from backend/.env")

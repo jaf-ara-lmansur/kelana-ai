@@ -52,6 +52,42 @@ def transport():
 
 #POST endpoint - receive JSON
 
+
+@app.post("/api/v1/trips/{id}/generate")
+def generate_trip_recommendation(id: int):
+    db = sessionLocal()
+    try:
+        trip = db.query(Trip).filter(Trip.id == id).first()
+        if trip is None:
+            raise HTTPException(status_code=404, detail=f"Trip with ID {id} not found")
+        
+        # 1. Gunakan trip.category yang tersimpan di DB sebagai travel_style untuk AI
+        travel_style = trip.category 
+        
+        # 2. Panggil AI dengan parameter lengkap dari DB
+        try:
+            ai_recommendation = get_ai_recommendation(
+                trip.days,
+                trip.destination,
+                trip.budget,
+                travel_style, # <-- Terisi nilai kategori (misal: "Backpacker", "Standard", "Luxury")
+            )
+            if not ai_recommendation:
+                ai_recommendation = "rekomendasi tidak ditemukan"
+        except Exception as e:
+            print(f"Error AI Generation: {e}")
+            ai_recommendation = "rekomendasi tidak ditemukan"
+        
+        # 3. Update dan simpan rekomendasi baru ke DB
+        trip.ai_recommendation = ai_recommendation
+        db.commit()
+        db.refresh(trip)
+        
+        return trip
+        
+    finally:
+        db.close()
+
 @app.post("/api/v1/trips")
 def create_trip(request: TripRequest):
 
