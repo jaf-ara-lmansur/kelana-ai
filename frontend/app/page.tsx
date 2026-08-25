@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 
 type Trip = {
@@ -16,6 +17,15 @@ type ItinerarySection = {
   title: string;
   content: string;
 };
+
+const travelStyles = [
+  { value: "relaxed", label: "Relaxed" },
+  { value: "adventure", label: "Adventure" },
+  { value: "cultural", label: "Cultural" },
+  { value: "culinary", label: "Culinary" },
+  { value: "family", label: "Family" },
+  { value: "backpacker", label: "Backpacker" },
+];
 
 function splitItinerary(markdown: string): ItinerarySection[] {
   const headings = [...markdown.matchAll(/^##\s+(.+)$/gm)];
@@ -35,6 +45,15 @@ function splitItinerary(markdown: string): ItinerarySection[] {
   });
 }
 
+function getDestinationImage(
+  destination: string,
+  title: string,
+  index: number,
+) {
+  const imageSeed = encodeURIComponent(`${destination}-${title}-${index}`);
+  return `https://picsum.photos/seed/${imageSeed}/1200/675`;
+}
+
 function LoadingState() {
   return (
     <div
@@ -52,24 +71,81 @@ function LoadingState() {
   );
 }
 
+function TravelOrnaments({ side }: { side: "left" | "right" }) {
+  const landmarks =
+    side === "left"
+      ? [
+          { icon: "🗼", name: "Paris" },
+          { icon: "🗿", name: "Merlion" },
+        ]
+      : [
+          { icon: "🗻", name: "Fuji" },
+          { icon: "🕌", name: "Landmark" },
+        ];
+
+  return (
+    <aside
+      className={`travel-ornaments travel-ornaments-${side}`}
+      aria-hidden="true"
+    >
+      <div className="signpost">
+        <span className="signpost-pole" />
+        <span className="direction-sign direction-sign-top">
+          {side === "left" ? "EXPLORE" : "ADVENTURE"}
+        </span>
+        <span className="direction-sign direction-sign-bottom">
+          {side === "left" ? "GO!" : "DISCOVER"}
+        </span>
+      </div>
+      <div className="landmark-stack">
+        {landmarks.map((landmark) => (
+          <div className="landmark" key={landmark.name}>
+            <span>{landmark.icon}</span>
+            <small>{landmark.name}</small>
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="site-footer">
+      <span>© 2026 Kelana AI</span>
+      <span className="footer-divider">•</span>
+      <a href="https://github.com" target="_blank" rel="noreferrer">
+        GitHub
+      </a>
+      <a href="mailto:hello@kelana.ai">Kontak</a>
+    </footer>
+  );
+}
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6 py-12 text-slate-100">
-      <section className="w-full max-w-2xl rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-2xl shadow-cyan-950/30 sm:p-12">
-        <header className="mb-10">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
-            Kelana AI
-          </p>
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-            Go Away
-          </h1>
-          <p className="mt-4 text-lg text-slate-400">
-            Panduan berkelana kemana saja
-          </p>
-        </header>
-
-        <TripForm />
+    <main className="travel-page">
+      <div className="map-grid" aria-hidden="true" />
+      <TravelOrnaments side="left" />
+      <section className="travel-content">
+        <div className="brand-mark">
+          <span className="brand-pin">✦</span>
+          <p>Kelana AI</p>
+        </div>
+        <section className="trip-panel">
+          <header className="mb-10">
+            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+              Go Away
+            </h1>
+            <p className="mt-4 text-lg text-slate-300">
+              Panduan berkelana kemana saja
+            </p>
+          </header>
+          <TripForm />
+        </section>
+        <Footer />
       </section>
+      <TravelOrnaments side="right" />
     </main>
   );
 }
@@ -78,6 +154,8 @@ function TripForm() {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isTravelStyleOpen, setIsTravelStyleOpen] = useState(false);
+  const [travelStyle, setTravelStyle] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -189,30 +267,59 @@ function TripForm() {
           </div>
         </div>
 
-        <div>
+        <div className="travel-style-field">
           <label
             className="mb-2 block text-sm font-medium text-slate-200"
             htmlFor="travel-style"
           >
             Travel Style
           </label>
-          <select
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20"
-            defaultValue=""
-            id="travel-style"
-            name="travelStyle"
-            required
-          >
-            <option disabled value="">
-              Select your travel style
-            </option>
-            <option value="relaxed">Relaxed</option>
-            <option value="adventure">Adventure</option>
-            <option value="cultural">Cultural</option>
-            <option value="culinary">Culinary</option>
-            <option value="family">Family</option>
-            <option value="backpacker">Backpacker</option>
-          </select>
+          <div className="travel-style-select-wrap">
+            <input name="travelStyle" type="hidden" value={travelStyle} />
+            <button
+              aria-expanded={isTravelStyleOpen}
+              aria-haspopup="listbox"
+              className="travel-style-select w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-left text-white outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20"
+              id="travel-style"
+              onClick={() => setIsTravelStyleOpen((isOpen) => !isOpen)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setIsTravelStyleOpen(false);
+              }}
+              type="button"
+            >
+              {travelStyles.find((style) => style.value === travelStyle)
+                ?.label ?? "Select your travel style"}
+              <span className="travel-style-chevron" aria-hidden="true">
+                {isTravelStyleOpen ? "↑" : "↓"}
+              </span>
+            </button>
+            {isTravelStyleOpen && (
+              <div
+                className="travel-style-options"
+                role="listbox"
+                aria-labelledby="travel-style"
+              >
+                {travelStyles.map((style) => (
+                  <button
+                    aria-selected={travelStyle === style.value}
+                    className="travel-style-option"
+                    key={style.value}
+                    onClick={() => {
+                      setTravelStyle(style.value);
+                      setIsTravelStyleOpen(false);
+                    }}
+                    role="option"
+                    type="button"
+                  >
+                    {style.label}
+                    {travelStyle === style.value && (
+                      <span aria-hidden="true">✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <button
@@ -244,23 +351,23 @@ function TripForm() {
             Your Trip Details
           </h2>
           <dl className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl bg-slate-950 p-4">
+            <div className="details-card rounded-xl bg-slate-950 p-4">
               <dt className="text-sm text-slate-500">Destination</dt>
               <dd className="mt-1 font-medium text-cyan-300">
                 {trip.destination}
               </dd>
             </div>
-            <div className="rounded-xl bg-slate-950 p-4">
+            <div className="details-card rounded-xl bg-slate-950 p-4">
               <dt className="text-sm text-slate-500">Budget</dt>
               <dd className="mt-1 font-medium text-white">
                 {trip.budget.toLocaleString()}
               </dd>
             </div>
-            <div className="rounded-xl bg-slate-950 p-4">
+            <div className="details-card rounded-xl bg-slate-950 p-4">
               <dt className="text-sm text-slate-500">Category</dt>
               <dd className="mt-1 font-medium text-white">{trip.category}</dd>
             </div>
-            <div className="rounded-xl bg-slate-950 p-4">
+            <div className="details-card rounded-xl bg-slate-950 p-4">
               <dt className="text-sm text-slate-500">Daily Budget</dt>
               <dd className="mt-1 font-medium text-white">
                 {trip.daily_budget.toLocaleString()}
@@ -274,9 +381,23 @@ function TripForm() {
                 {splitItinerary(trip.ai_recommendation).map(
                   (section, index) => (
                     <article
-                      className="rounded-xl border border-slate-800 bg-slate-950 p-5 shadow-lg shadow-black/10"
+                      className="itinerary-card rounded-xl border border-slate-800 bg-slate-950 p-5 shadow-lg shadow-black/10"
                       key={`${section.title}-${index}`}
                     >
+                      <div className="itinerary-image-wrap">
+                        <Image
+                          alt={`Pemandangan ${section.title} di ${trip.destination}`}
+                          className="itinerary-image"
+                          fill
+                          sizes="(max-width: 700px) 100vw, 640px"
+                          src={getDestinationImage(
+                            trip.destination,
+                            section.title,
+                            index,
+                          )}
+                          unoptimized
+                        />
+                      </div>
                       <h4 className="text-lg font-bold text-cyan-300">
                         {section.title}
                       </h4>
