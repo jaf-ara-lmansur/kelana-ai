@@ -27,8 +27,10 @@ def get_ai_recommendation(days, destination, budget, travel_style):
     You are an expert travel assistant. Generate a detailed {days}-day itinerary for {destination} with a total budget of ${budget} using a {travel_style} travel style.
 
     CRITICAL REQUIREMENTS:
-    1. markdown with headers(##) and bullet list (-) every daily itinerary (morning activities : 2-3 activities, afternoon activities : visit cultural sites and trying local experiences, evening activities : dinner and night life), include an estimated cost in USD (e.g., "Breakfast at local warung (~$5)").
-    2. At the VERY END of the response, you MUST provide a "Budget Breakdown" section formatted like this:
+    1. markdown with headers(##) and bullet list (-) every daily itinerary (morning activities : 2-3 activities, afternoon activities : visit cultural sites and trying local experiences, evening activities : dinner and night life),  and local food recommendations include an estimated cost in USD (e.g., "Breakfast at local restaurant (~$5)").
+    2. give a travel tips section
+    3. make total dailybudget at the end of the itinerary.
+    4. At the VERY END of the response, you MUST provide a "Budget Breakdown" section formatted like this:
        
        ---
        **Budget Breakdown:**

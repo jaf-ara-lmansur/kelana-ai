@@ -1,5 +1,6 @@
 #sesi 3
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from bedrock_service import (get_ai_recommendation)
 from services.trip_service import(
@@ -21,6 +22,13 @@ class TripRequest (BaseModel):
 
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 init_db() 
 
 @app.get("/")
