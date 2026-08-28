@@ -2,9 +2,12 @@
 
 import { FormEvent, useState } from "react";
 import Image from "next/image";
-import ReactMarkdown from "react-markdown";
+import { useRouter } from "next/navigation";
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 
 type Trip = {
+  id: number;
   destination: string;
   days: number;
   budget: number;
@@ -13,46 +16,11 @@ type Trip = {
   ai_recommendation: string | null;
 };
 
-type ItinerarySection = {
-  title: string;
-  content: string;
-};
-
 const travelStyles = [
-  { value: "relaxed", label: "Relaxed" },
-  { value: "adventure", label: "Adventure" },
-  { value: "cultural", label: "Cultural" },
-  { value: "culinary", label: "Culinary" },
+  { value: "solo", label: "Solo" },
   { value: "family", label: "Family" },
   { value: "backpacker", label: "Backpacker" },
 ];
-
-function splitItinerary(markdown: string): ItinerarySection[] {
-  const headings = [...markdown.matchAll(/^##\s+(.+)$/gm)];
-  if (headings.length === 0) {
-    return [{ title: "Itinerary", content: markdown.trim() }];
-  }
-
-  return headings.map((heading, index) => {
-    const headingStart = heading.index ?? 0;
-    const contentStart = headingStart + heading[0].length;
-    const contentEnd = headings[index + 1]?.index ?? markdown.length;
-
-    return {
-      title: heading[1].trim(),
-      content: markdown.slice(contentStart, contentEnd).trim(),
-    };
-  });
-}
-
-function getDestinationImage(
-  destination: string,
-  title: string,
-  index: number,
-) {
-  const imageSeed = encodeURIComponent(`${destination}-${title}-${index}`);
-  return `https://picsum.photos/seed/${imageSeed}/1200/675`;
-}
 
 function LoadingState() {
   return (
@@ -109,36 +77,32 @@ function TravelOrnaments({ side }: { side: "left" | "right" }) {
   );
 }
 
-function Footer() {
-  return (
-    <footer className="site-footer">
-      <span>© 2026 Kelana AI</span>
-      <span className="footer-divider">•</span>
-      <a href="https://github.com" target="_blank" rel="noreferrer">
-        GitHub
-      </a>
-      <a href="mailto:hello@kelana.ai">Kontak</a>
-    </footer>
-  );
-}
-
 export default function Home() {
   return (
     <main className="travel-page">
       <div className="map-grid" aria-hidden="true" />
       <TravelOrnaments side="left" />
       <section className="travel-content">
-        <div className="brand-mark">
-          <span className="brand-pin">✦</span>
-          <p>Kelana AI</p>
-        </div>
+        <Navbar showHistory />
         <section className="trip-panel">
+          <div className="hero-media">
+            <Image
+              alt="Pemandangan alam untuk inspirasi perjalanan"
+              fill
+              priority
+              sizes="(max-width: 700px) 100vw, 640px"
+              src="/lonson.avif"
+            />
+            <div className="hero-media-caption">
+              <span>Plan less. Wander more.</span>
+            </div>
+          </div>
           <header className="mb-10">
-            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-              Go Away
-            </h1>
-            <p className="mt-4 text-lg text-slate-300">
-              Panduan berkelana kemana saja
+            <p className="eyebrow">Your next story starts here</p>
+            <h1 className="home-title">Berkelana tanpa ragu.</h1>
+            <p className="home-intro">
+              Kelana AI merangkai perjalanan yang terasa personal, dari
+              destinasi impian hingga itinerary yang siap kamu jalani.
             </p>
           </header>
           <TripForm />
@@ -151,16 +115,15 @@ export default function Home() {
 }
 
 function TripForm() {
-  const [trip, setTrip] = useState<Trip | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isTravelStyleOpen, setIsTravelStyleOpen] = useState(false);
   const [travelStyle, setTravelStyle] = useState("");
+  const router = useRouter();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    setTrip(null);
 
     const formData = new FormData(event.currentTarget);
     const destination = String(formData.get("destination") ?? "").trim();
@@ -197,7 +160,8 @@ function TripForm() {
         throw new Error("Unable to generate your trip. Please try again.");
       }
 
-      setTrip((await response.json()) as Trip);
+      const trip = (await response.json()) as Trip;
+      router.push(`/trips/${trip.id}`);
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -340,101 +304,6 @@ function TripForm() {
         >
           {error}
         </p>
-      )}
-
-      {trip && (
-        <section
-          className="mt-8 border-t border-slate-800 pt-8"
-          aria-live="polite"
-        >
-          <h2 className="text-2xl font-semibold text-white">
-            Your Trip Details
-          </h2>
-          <dl className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div className="details-card rounded-xl bg-slate-950 p-4">
-              <dt className="text-sm text-slate-500">Destination</dt>
-              <dd className="mt-1 font-medium text-cyan-300">
-                {trip.destination}
-              </dd>
-            </div>
-            <div className="details-card rounded-xl bg-slate-950 p-4">
-              <dt className="text-sm text-slate-500">Budget</dt>
-              <dd className="mt-1 font-medium text-white">
-                {trip.budget.toLocaleString()}
-              </dd>
-            </div>
-            <div className="details-card rounded-xl bg-slate-950 p-4">
-              <dt className="text-sm text-slate-500">Category</dt>
-              <dd className="mt-1 font-medium text-white">{trip.category}</dd>
-            </div>
-            <div className="details-card rounded-xl bg-slate-950 p-4">
-              <dt className="text-sm text-slate-500">Daily Budget</dt>
-              <dd className="mt-1 font-medium text-white">
-                {trip.daily_budget.toLocaleString()}
-              </dd>
-            </div>
-          </dl>
-          {trip.ai_recommendation && (
-            <div className="mt-6 space-y-4 font-[family-name:var(--font-montserrat)]">
-              <h3 className="font-semibold text-white">Itinerary</h3>
-              <div className="space-y-4">
-                {splitItinerary(trip.ai_recommendation).map(
-                  (section, index) => (
-                    <article
-                      className="itinerary-card rounded-xl border border-slate-800 bg-slate-950 p-5 shadow-lg shadow-black/10"
-                      key={`${section.title}-${index}`}
-                    >
-                      <div className="itinerary-image-wrap">
-                        <Image
-                          alt={`Pemandangan ${section.title} di ${trip.destination}`}
-                          className="itinerary-image"
-                          fill
-                          sizes="(max-width: 700px) 100vw, 640px"
-                          src={getDestinationImage(
-                            trip.destination,
-                            section.title,
-                            index,
-                          )}
-                          unoptimized
-                        />
-                      </div>
-                      <h4 className="text-lg font-bold text-cyan-300">
-                        {section.title}
-                      </h4>
-                      <ReactMarkdown
-                        components={{
-                          h3: ({ children }) => (
-                            <h5 className="mt-4 text-sm font-bold uppercase tracking-wide text-slate-100">
-                              {children}
-                            </h5>
-                          ),
-                          p: ({ children }) => (
-                            <p className="mt-3 text-sm leading-7 text-slate-300 first:mt-0">
-                              {children}
-                            </p>
-                          ),
-                          ul: ({ children }) => (
-                            <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-300">
-                              {children}
-                            </ul>
-                          ),
-                          strong: ({ children }) => (
-                            <strong className="font-bold text-white">
-                              {children}
-                            </strong>
-                          ),
-                          hr: () => <hr className="my-5 border-slate-800" />,
-                        }}
-                      >
-                        {section.content}
-                      </ReactMarkdown>
-                    </article>
-                  ),
-                )}
-              </div>
-            </div>
-          )}
-        </section>
       )}
     </>
   );
