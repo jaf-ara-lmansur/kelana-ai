@@ -5,11 +5,13 @@ import TripList from "@/components/TripList";
 import type { Trip } from "@/types/trip";
 
 type SortOption = "asc" | "desc" | "cheapest" | "most-expensive";
+const TRIPS_PER_PAGE = 10;
 
 export default function TripHistoryClient({ trips }: { trips: Trip[] }) {
   const [destinationQuery, setDestinationQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState<SortOption>("asc");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const categories = Array.from(
     new Set(trips.map((trip) => trip.category).filter(Boolean)),
@@ -30,10 +32,33 @@ export default function TripHistoryClient({ trips }: { trips: Trip[] }) {
       return sort === "asc" ? comparison : -comparison;
     });
 
+  const pageCount = Math.ceil(visibleTrips.length / TRIPS_PER_PAGE);
+  const safePage = pageCount === 0 ? 1 : Math.min(currentPage, pageCount);
+  const paginatedTrips = visibleTrips.slice(
+    (safePage - 1) * TRIPS_PER_PAGE,
+    safePage * TRIPS_PER_PAGE,
+  );
+
+  function updateDestinationQuery(value: string) {
+    setDestinationQuery(value);
+    setCurrentPage(1);
+  }
+
+  function updateCategory(value: string) {
+    setCategory(value);
+    setCurrentPage(1);
+  }
+
+  function updateSort(value: SortOption) {
+    setSort(value);
+    setCurrentPage(1);
+  }
+
   function resetFilters() {
     setDestinationQuery("");
     setCategory("all");
     setSort("asc");
+    setCurrentPage(1);
   }
 
   return (
@@ -43,7 +68,7 @@ export default function TripHistoryClient({ trips }: { trips: Trip[] }) {
           <label htmlFor="destination-search">Search destination</label>
           <input
             id="destination-search"
-            onChange={(event) => setDestinationQuery(event.target.value)}
+            onChange={(event) => updateDestinationQuery(event.target.value)}
             placeholder="e.g. Singapore"
             type="search"
             value={destinationQuery}
@@ -53,7 +78,7 @@ export default function TripHistoryClient({ trips }: { trips: Trip[] }) {
           <label htmlFor="category-filter">Category</label>
           <select
             id="category-filter"
-            onChange={(event) => setCategory(event.target.value)}
+            onChange={(event) => updateCategory(event.target.value)}
             value={category}
           >
             <option value="all">All categories</option>
@@ -68,7 +93,7 @@ export default function TripHistoryClient({ trips }: { trips: Trip[] }) {
           <label htmlFor="trip-sort">Sort by</label>
           <select
             id="trip-sort"
-            onChange={(event) => setSort(event.target.value as SortOption)}
+            onChange={(event) => updateSort(event.target.value as SortOption)}
             value={sort}
           >
             <option value="asc">Destination: A to Z</option>
@@ -80,7 +105,34 @@ export default function TripHistoryClient({ trips }: { trips: Trip[] }) {
       </section>
 
       {visibleTrips.length > 0 ? (
-        <TripList trips={visibleTrips} />
+        <>
+          <TripList trips={paginatedTrips} />
+          {pageCount > 1 && (
+            <nav className="history-pagination" aria-label="Trip history pages">
+              <button
+                aria-label="Previous page"
+                className="pagination-button"
+                disabled={safePage === 1}
+                onClick={() => setCurrentPage((page) => page - 1)}
+                type="button"
+              >
+                ←
+              </button>
+              <span>
+                Page {safePage} of {pageCount}
+              </span>
+              <button
+                aria-label="Next page"
+                className="pagination-button"
+                disabled={safePage === pageCount}
+                onClick={() => setCurrentPage((page) => page + 1)}
+                type="button"
+              >
+                →
+              </button>
+            </nav>
+          )}
+        </>
       ) : (
         <section className="empty-history filtered-empty" role="status">
           <span className="empty-compass" aria-hidden="true">

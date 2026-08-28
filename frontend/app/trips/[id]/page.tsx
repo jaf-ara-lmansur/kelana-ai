@@ -20,7 +20,11 @@ function splitItinerary(markdown: string) {
 }
 
 function formatAmount(amount: number) {
-  return new Intl.NumberFormat("id-ID").format(amount);
+  return new Intl.NumberFormat("en-US", {
+    currency: "USD",
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(amount);
 }
 
 export default async function TripDetailPage({
