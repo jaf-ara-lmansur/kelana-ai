@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import AuthGuard from "@/components/AuthGuard";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 
@@ -108,6 +109,7 @@ function TripForm() {
 
     setIsLoading(true);
     try {
+      const token = localStorage.getItem("access_token");
       const response = await fetch("http://localhost:8000/api/v1/trips", {
         body: JSON.stringify({
           destination,
@@ -115,12 +117,19 @@ function TripForm() {
           budget,
           travel_style: travelStyle,
         }),
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         method: "POST",
       });
 
       if (!response.ok) {
-        throw new Error("Unable to generate your trip. Please try again.");
+        const errorBody = await response.json().catch(() => ({}));
+        throw new Error(
+          errorBody?.detail ??
+            "Unable to generate your trip. Please try again.",
+        );
       }
 
       const trip = (await response.json()) as Trip;
@@ -274,37 +283,39 @@ function TripForm() {
 
 export default function GenerateTripPage() {
   return (
-    <main className="travel-page">
-      <div className="map-grid" aria-hidden="true" />
-      <TravelOrnaments side="left" />
-      <section className="travel-content">
-        <Navbar backHref="/" backLabel="Home" showHistory />
-        <section className="trip-panel">
-          <div className="hero-media">
-            <Image
-              alt="Pemandangan alam untuk inspirasi perjalanan"
-              fill
-              priority
-              sizes="(max-width: 700px) 100vw, 640px"
-              src="/lonson.avif"
-            />
-            <div className="hero-media-caption">
-              <span>Plan less. Wander more.</span>
+    <AuthGuard>
+      <main className="travel-page">
+        <div className="map-grid" aria-hidden="true" />
+        <TravelOrnaments side="left" />
+        <section className="travel-content">
+          <Navbar backHref="/" backLabel="Home" showHistory />
+          <section className="trip-panel">
+            <div className="hero-media">
+              <Image
+                alt="Pemandangan alam untuk inspirasi perjalanan"
+                fill
+                priority
+                sizes="(max-width: 700px) 100vw, 640px"
+                src="/lonson.avif"
+              />
+              <div className="hero-media-caption">
+                <span>Plan less. Wander more.</span>
+              </div>
             </div>
-          </div>
-          <header className="mb-10">
-            <p className="eyebrow">Your next story starts here</p>
-            <h1 className="home-title">Berkelana tanpa ragu.</h1>
-            <p className="home-intro">
-              Kelana AI merangkai perjalanan yang terasa personal, dari
-              destinasi impian hingga itinerary yang siap kamu jalani.
-            </p>
-          </header>
-          <TripForm />
+            <header className="mb-10">
+              <p className="eyebrow">Your next story starts here</p>
+              <h1 className="home-title">Berkelana tanpa ragu.</h1>
+              <p className="home-intro">
+                Kelana AI merangkai perjalanan yang terasa personal, dari
+                destinasi impian hingga itinerary yang siap kamu jalani.
+              </p>
+            </header>
+            <TripForm />
+          </section>
+          <Footer />
         </section>
-        <Footer />
-      </section>
-      <TravelOrnaments side="right" />
-    </main>
+        <TravelOrnaments side="right" />
+      </main>
+    </AuthGuard>
   );
 }
