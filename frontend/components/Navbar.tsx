@@ -20,7 +20,7 @@ export default function Navbar({
       </Link>
       <div className="navbar-actions">
         {showNewTrip && (
-          <Link className="new-trip-button" href="/">
+          <Link className="new-trip-button" href="/generate">
             + New trip
           </Link>
         )}

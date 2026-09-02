@@ -14,7 +14,7 @@ export default function TripNotFound() {
           <Link className="secondary-button" href="/trips">
             Back to history
           </Link>
-          <Link className="primary-button" href="/">
+          <Link className="primary-button" href="/generate">
             Generate new trip
           </Link>
         </div>

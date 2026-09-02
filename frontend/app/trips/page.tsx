@@ -37,7 +37,7 @@ export default async function TripsPage() {
                 ? "Pastikan server Kelana AI sedang berjalan lalu coba lagi."
                 : "Mulai rencanakan perjalanan pertamamu bersama Kelana AI."}
             </p>
-            <Link className="primary-button" href="/">
+            <Link className="primary-button" href="/generate">
               Generate new trip
             </Link>
           </section>

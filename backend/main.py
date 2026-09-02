@@ -1,7 +1,7 @@
 #sesi 3
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from bedrock_service import (get_ai_recommendation)
 from services.trip_service import(
     calculate_daily_budget,
@@ -9,8 +9,10 @@ from services.trip_service import(
     get_recomenmendations,
     get_all_transportation
 )
+from services.auth_services import get_current_user, register_user, login_user
 from database import init_db, sessionLocal
 from models.trip import Trip
+from models.user import User
 
 
 class TripRequest (BaseModel):
@@ -19,6 +21,29 @@ class TripRequest (BaseModel):
     budget          :float
     travel_style   :str
 #fastApi validate JSON
+
+class RegisterRequest(BaseModel):
+    name:     str
+    email:    str
+    password: str
+
+    @field_validator("email")
+    @classmethod
+    def email_must_contain_at(cls, v: str) -> str:
+        if "@" not in v or "." not in v.split("@")[-1]:
+            raise ValueError("Invalid email address")
+        return v.lower().strip()
+
+class LoginRequest(BaseModel):
+    email:    str
+    password: str
+
+    @field_validator("email")
+    @classmethod
+    def email_must_contain_at(cls, v: str) -> str:
+        if "@" not in v or "." not in v.split("@")[-1]:
+            raise ValueError("Invalid email address")
+        return v.lower().strip()
 
 
 app = FastAPI()
@@ -42,6 +67,54 @@ def health_status():
     return{
        "status" : "OK"
     }
+#___________authentication endpoints____________________
+
+@app.post("/api/v1/auth/register", status_code=201)
+def register(request: RegisterRequest):
+    db = sessionLocal()
+    try:
+        user = register_user(
+            db       = db,
+            name     = request.name,
+            email    = request.email,
+            password = request.password,
+        )
+        return {
+            "id":         user.id,
+            "name":       user.name,
+            "email":      user.email,
+            "created_at": user.created_at,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    finally:
+        db.close()
+
+@app.post("/api/v1/auth/login")
+def login(request: LoginRequest):
+    db = sessionLocal()
+    try:
+        return login_user(db=db, email=request.email, password=request.password)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    finally:
+        db.close()
+
+@app.get("/api/v1/auth/me")
+def me(current_user: User = Depends(get_current_user)):
+    db = sessionLocal()
+    try:
+        trip_count = db.query(Trip).filter(Trip.user_id == current_user.id).count()
+    finally:
+        db.close()
+    return {
+        "id":          current_user.id,
+        "name":        current_user.name,
+        "email":       current_user.email,
+        "created_at":  current_user.created_at,
+        "total_trips": trip_count,
+    }
+#____________________
 
 @app.get("/api/v1/recommendations")
 def recommendations(country: str = "japan"):  #nilai bawaan (default)
@@ -96,8 +169,11 @@ def generate_trip_recommendation(id: int):
     finally:
         db.close()
 
+#____protected endpoints - require valid JWT token____
+
 @app.post("/api/v1/trips")
-def create_trip(request: TripRequest):
+def create_trip(request: TripRequest,
+                current_user: User = Depends(get_current_user)):
 
     #reuse session 2 busines logic
     try:
@@ -120,7 +196,8 @@ def create_trip(request: TripRequest):
         budget = request.budget,
         category = category,
         daily_budget = daily_budget,
-        ai_recommendation = ai_recommendation
+        ai_recommendation = ai_recommendation,
+        user_id = current_user.id
     )
     #save to postgreSQL
     db=sessionLocal()  
@@ -130,44 +207,60 @@ def create_trip(request: TripRequest):
     db.close()
     return trip
 
-@app.get("/api/v1/trips")
-def list_trips():
+#@app.get("/api/v1/trips")
+#def list_trips():
     db=sessionLocal()
     trips=db.query(Trip).all()
     db.close()
     return trips
 
+@app.get("/api/v1/trips")
+def list_trips(current_user: User = Depends(get_current_user)):
+    db = sessionLocal()
+    try:
+        return db.query(Trip).filter(Trip.user_id == current_user.id).all()
+    finally:
+        db.close()
+
 @app.get("/api/v1/trips/{trip_id}")
-def get_trip(trip_id: int):
+def get_trip(trip_id: int,
+             current_user: User = Depends(get_current_user)):
     db=sessionLocal()
     trip=db.query(Trip).filter(Trip.id == trip_id).first()
     db.close()
     if trip is None:
         raise HTTPException(status_code=404, detail=f"Trip with ID {trip_id} not found")
+    if trip.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this trip")
     return trip
 
 @app.delete("/api/v1/trips/{id}")
-def delete_trip(id: int):
+def delete_trip(id: int,
+                current_user: User = Depends(get_current_user)):
     db = sessionLocal()
     trip = db.query(Trip).filter(Trip.id == id).first()
     if trip is None:
         db.close()
         raise HTTPException(status_code=404, detail=f"Trip with ID {id} not found")
+    if trip.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this trip")
     db.delete(trip)
     db.commit()
     db.close()
     return {"message": f"Trip with ID {id} has been deleted"}
 
-from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
 
 @app.put("/api/v1/trips/{id}")
-def update_trip(id: int, request: TripRequest):
+def update_trip(id: int, request: TripRequest,
+                current_user: User = Depends(get_current_user)):
     db = sessionLocal()
     try:
         trip = db.query(Trip).filter(Trip.id == id).first()
         if trip is None:
             raise HTTPException(status_code=404, detail=f"Trip with ID {id} not found")
+        if trip.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to update this trip")
         
         # 1. Update budget dari request
         trip.budget = request.budget
