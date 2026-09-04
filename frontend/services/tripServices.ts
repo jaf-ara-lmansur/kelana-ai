@@ -75,6 +75,20 @@ export async function updateTrip(id: number, tripData: TripUpdateData): Promise<
   return response.json() as Promise<Trip>;
 }
 
+export async function regenerateTrip(id: number): Promise<Trip> {
+  const response = await fetch(`${API_URL}/trips/${id}/generate`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.detail ?? "Unable to regenerate this trip.");
+  }
+
+  return response.json() as Promise<Trip>;
+}
+
 export async function deleteTrip(id: number): Promise<void> {
   const response = await fetch(`${API_URL}/trips/${id}`, {
     method: "DELETE",

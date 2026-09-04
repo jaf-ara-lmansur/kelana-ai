@@ -140,12 +140,17 @@ def transport():
 
 
 @app.post("/api/v1/trips/{id}/generate")
-def generate_trip_recommendation(id: int):
+def generate_trip_recommendation(
+    id: int,
+    current_user: User = Depends(get_current_user),
+):
     db = sessionLocal()
     try:
         trip = db.query(Trip).filter(Trip.id == id).first()
         if trip is None:
             raise HTTPException(status_code=404, detail=f"Trip with ID {id} not found")
+        if trip.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to generate this trip")
         
         # 1. Gunakan trip.category yang tersimpan di DB sebagai travel_style untuk AI
         travel_style = trip.category 

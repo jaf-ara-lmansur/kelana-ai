@@ -1001,7 +1001,9 @@ button {
   display: inline-flex;
   height: 2.55rem;
   justify-content: center;
-  transition: background 180ms ease, transform 180ms ease;
+  transition:
+    background 180ms ease,
+    transform 180ms ease;
   width: 2.55rem;
 }
 
@@ -1623,7 +1625,11 @@ button {
 
 .profile-page {
   background:
-    radial-gradient(circle at 85% 12%, rgb(250 204 21 / 0.16), transparent 25rem),
+    radial-gradient(
+      circle at 85% 12%,
+      rgb(250 204 21 / 0.16),
+      transparent 25rem
+    ),
     linear-gradient(135deg, #082f49 0%, #0f4c5c 52%, #164e63 100%);
   min-height: 100vh;
   padding: 2.25rem 1.25rem 4rem;
@@ -1772,7 +1778,9 @@ button {
   position: fixed !important;
   right: 1.25rem;
   text-decoration: none;
-  transition: transform 180ms ease, background-color 180ms ease;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
   z-index: 1000;
 }
 

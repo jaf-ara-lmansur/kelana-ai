@@ -78,8 +78,12 @@ export default function ProfilePage() {
               Memuat profil...
             </section>
           ) : hasError || !profile ? (
-            <section className="profile-status profile-status-error" role="alert">
-              Profil belum dapat dimuat. Pastikan server Kelana AI sedang berjalan.
+            <section
+              className="profile-status profile-status-error"
+              role="alert"
+            >
+              Profil belum dapat dimuat. Pastikan server Kelana AI sedang
+              berjalan.
             </section>
           ) : (
             <section className="profile-content" aria-label="Profile details">

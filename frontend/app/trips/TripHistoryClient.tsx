@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import TripList from "@/components/TripList";
-import { deleteTrip, updateTrip } from "@/services/tripServices";
+import { deleteTrip, regenerateTrip, updateTrip } from "@/services/tripServices";
 import type { Trip } from "@/types/trip";
 
 type SortOption = "asc" | "desc" | "cheapest" | "most-expensive";
@@ -78,12 +78,13 @@ export default function TripHistoryClient({ trips }: { trips: Trip[] }) {
     setIsSaving(true);
     setActionError("");
     try {
-      const updatedTrip = await updateTrip(editingTrip.id, {
+      await updateTrip(editingTrip.id, {
         destination: editingTrip.destination,
         days: editingTrip.days,
         budget: Number(editBudget),
         travel_style: editingTrip.travel_style || editingTrip.category,
       });
+      const updatedTrip = await regenerateTrip(editingTrip.id);
       setTripItems((currentTrips) =>
         currentTrips.map((trip) => (trip.id === updatedTrip.id ? updatedTrip : trip)),
       );

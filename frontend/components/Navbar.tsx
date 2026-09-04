@@ -84,8 +84,6 @@ export default function Navbar({
           Kelana AI
         </Link>
         <div className="navbar-actions">
-          
-
           {user ? (
             <div className="user-menu-wrap">
               <button
