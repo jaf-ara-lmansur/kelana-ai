@@ -143,6 +143,12 @@ function TripForm() {
             className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20"
             id="destination"
             name="destination"
+            onChange={(event) => {
+              const value = event.target.value;
+              event.target.value = value
+                ? value.charAt(0).toUpperCase() + value.slice(1)
+                : value;
+            }}
             placeholder="Where do you want to go?"
             required
             type="text"
