@@ -1,3 +1,5 @@
+import Link from "next/dist/client/link";
+
 export default function HelpPage() {
   return (
     <main className="auth-page">
@@ -11,6 +13,11 @@ export default function HelpPage() {
             Butuh bantuan? Kamu bisa menghubungi support kami atau melihat panduan
             perjalanan di halaman ini.
           </p>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "2rem" }}>
+            <Link className="primary-button" href="/">
+              Kembali ke Home
+            </Link>
+          </div>
         </div>
       </div>
     </main>

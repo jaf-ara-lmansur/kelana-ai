@@ -3,7 +3,8 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 from sqlalchemy import func
-from bedrock_service import (get_ai_recommendation)
+from bedrock_service import get_ai_recommendation
+from services.kb_services import ask_knowledge_base
 from services.trip_service import(
     calculate_daily_budget,
     get_trip_category,
@@ -45,6 +46,9 @@ class LoginRequest(BaseModel):
         if "@" not in v or "." not in v.split("@")[-1]:
             raise ValueError("Invalid email address")
         return v.lower().strip()
+
+class QuestionRequest(BaseModel):
+    question: str
 
 
 app = FastAPI()
@@ -288,3 +292,11 @@ def update_trip(id: int, request: TripRequest,
 
     finally:
         db.close()
+
+@app.post("/api/v1/ask")
+def ask_endpoint(request:QuestionRequest):
+    
+        answer = ask_knowledge_base(request.question)
+        return {"question": request.question,
+                "answer": answer
+                }
