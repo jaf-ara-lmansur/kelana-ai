@@ -50,3 +50,39 @@ export async function generateTripData(tripData: unknown) {
 
   return response.json();
 }
+
+export type TripUpdateData = {
+  destination: string;
+  days: number;
+  budget: number;
+  travel_style: string;
+};
+
+export async function updateTrip(id: number, tripData: TripUpdateData): Promise<Trip> {
+  const response = await fetch(`${API_URL}/trips/${id}`, {
+    method: "PUT",
+    headers: getAuthHeaders({
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify(tripData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.detail ?? "Unable to update this trip.");
+  }
+
+  return response.json() as Promise<Trip>;
+}
+
+export async function deleteTrip(id: number): Promise<void> {
+  const response = await fetch(`${API_URL}/trips/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.detail ?? "Unable to delete this trip.");
+  }
+}

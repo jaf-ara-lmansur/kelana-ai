@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import TripHistoryClient from "@/app/trips/TripHistoryClient";
 import type { Trip } from "@/types/trip";
 import AuthGuard from "@/components/AuthGuard";
+import CreateTripFloat from "@/components/CreateTripFloat";
 
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -86,6 +87,7 @@ export default function TripsPage() {
             <TripHistoryClient trips={trips} />
           )}
         </div>
+        <CreateTripFloat />
       </main>
     </AuthGuard>
   );

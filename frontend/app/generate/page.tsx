@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import Footer from "@/components/Footer";
+import LoadingTransition from "@/components/LoadingTransition";
 import Navbar from "@/components/Navbar";
 
 type Trip = {
@@ -22,23 +23,6 @@ const travelStyles = [
   { value: "family", label: "Family" },
   { value: "backpacker", label: "Backpacker" },
 ];
-
-function LoadingState() {
-  return (
-    <div
-      aria-live="polite"
-      aria-label="Sedang menyiapkan itinerary"
-      className="loading-panel mt-8"
-      role="status"
-    >
-      <div className="loading-copy">
-        <span className="loading-eyebrow">Kelana AI</span>
-        <p>Merangkai perjalanan terbaik untukmu...</p>
-      </div>
-      <div className="loading-spinner" aria-hidden="true" />
-    </div>
-  );
-}
 
 function TravelOrnaments({ side }: { side: "left" | "right" }) {
   const landmarks =
@@ -267,7 +251,7 @@ function TripForm() {
         </button>
       </form>
 
-      {isLoading && <LoadingState />}
+      {isLoading && <LoadingTransition />}
 
       {error && (
         <p

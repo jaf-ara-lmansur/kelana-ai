@@ -2,6 +2,7 @@
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
+from sqlalchemy import func
 from bedrock_service import (get_ai_recommendation)
 from services.trip_service import(
     calculate_daily_budget,
@@ -105,6 +106,9 @@ def me(current_user: User = Depends(get_current_user)):
     db = sessionLocal()
     try:
         trip_count = db.query(Trip).filter(Trip.user_id == current_user.id).count()
+        total_budget = db.query(func.coalesce(func.sum(Trip.budget), 0)).filter(
+            Trip.user_id == current_user.id
+        ).scalar()
     finally:
         db.close()
     return {
@@ -113,6 +117,7 @@ def me(current_user: User = Depends(get_current_user)):
         "email":       current_user.email,
         "created_at":  current_user.created_at,
         "total_trips": trip_count,
+        "total_budget": float(total_budget),
     }
 #____________________
 

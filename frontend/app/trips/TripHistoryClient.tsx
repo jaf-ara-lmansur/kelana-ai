@@ -2,22 +2,28 @@
 
 import { useState } from "react";
 import TripList from "@/components/TripList";
+import { deleteTrip, updateTrip } from "@/services/tripServices";
 import type { Trip } from "@/types/trip";
 
 type SortOption = "asc" | "desc" | "cheapest" | "most-expensive";
 const TRIPS_PER_PAGE = 10;
 
 export default function TripHistoryClient({ trips }: { trips: Trip[] }) {
+  const [tripItems, setTripItems] = useState(trips);
   const [destinationQuery, setDestinationQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState<SortOption>("asc");
   const [currentPage, setCurrentPage] = useState(1);
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [editBudget, setEditBudget] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   const categories = Array.from(
-    new Set(trips.map((trip) => trip.category).filter(Boolean)),
+    new Set(tripItems.map((trip) => trip.category).filter(Boolean)),
   ).sort((first, second) => first.localeCompare(second));
 
-  const visibleTrips = trips
+  const visibleTrips = tripItems
     .filter((trip) => {
       const matchesDestination = trip.destination
         .toLocaleLowerCase()
@@ -59,6 +65,45 @@ export default function TripHistoryClient({ trips }: { trips: Trip[] }) {
     setCategory("all");
     setSort("asc");
     setCurrentPage(1);
+  }
+
+  function startEditing(trip: Trip) {
+    setActionError("");
+    setEditingTrip(trip);
+    setEditBudget(String(trip.budget));
+  }
+
+  async function saveEdit() {
+    if (!editingTrip || Number(editBudget) <= 0) return;
+    setIsSaving(true);
+    setActionError("");
+    try {
+      const updatedTrip = await updateTrip(editingTrip.id, {
+        destination: editingTrip.destination,
+        days: editingTrip.days,
+        budget: Number(editBudget),
+        travel_style: editingTrip.travel_style || editingTrip.category,
+      });
+      setTripItems((currentTrips) =>
+        currentTrips.map((trip) => (trip.id === updatedTrip.id ? updatedTrip : trip)),
+      );
+      setEditingTrip(null);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Trip gagal diperbarui.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function removeTrip(trip: Trip) {
+    if (!window.confirm(`Hapus trip ke ${trip.destination}?`)) return;
+    setActionError("");
+    try {
+      await deleteTrip(trip.id);
+      setTripItems((currentTrips) => currentTrips.filter((item) => item.id !== trip.id));
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Trip gagal dihapus.");
+    }
   }
 
   return (
@@ -106,7 +151,7 @@ export default function TripHistoryClient({ trips }: { trips: Trip[] }) {
 
       {visibleTrips.length > 0 ? (
         <>
-          <TripList trips={paginatedTrips} />
+          <TripList onDelete={removeTrip} onEdit={startEditing} trips={paginatedTrips} />
           {pageCount > 1 && (
             <nav className="history-pagination" aria-label="Trip history pages">
               <button
@@ -148,6 +193,38 @@ export default function TripHistoryClient({ trips }: { trips: Trip[] }) {
             Reset filters
           </button>
         </section>
+      )}
+      {actionError && <p className="trip-action-error" role="alert">{actionError}</p>}
+      {editingTrip && (
+        <div className="trip-modal-backdrop" role="presentation">
+          <form
+            className="trip-edit-modal"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void saveEdit();
+            }}
+          >
+            <p className="trip-card-label">Edit trip</p>
+            <h2>{editingTrip.destination}</h2>
+            <label htmlFor="edit-budget">Budget</label>
+            <input
+              id="edit-budget"
+              min="1"
+              onChange={(event) => setEditBudget(event.target.value)}
+              required
+              type="number"
+              value={editBudget}
+            />
+            <div className="trip-modal-actions">
+              <button className="secondary-button" onClick={() => setEditingTrip(null)} type="button">
+                Batal
+              </button>
+              <button className="primary-button" disabled={isSaving || Number(editBudget) <= 0} type="submit">
+                {isSaving ? "Menyimpan..." : "Simpan"}
+              </button>
+            </div>
+          </form>
+        </div>
       )}
     </>
   );

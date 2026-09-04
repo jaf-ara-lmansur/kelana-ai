@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Pencil, Trash2 } from "lucide-react";
 import type { Trip } from "@/types/trip";
 
 const destinationFlags: Record<string, string> = {
@@ -49,7 +50,15 @@ function getBadgeVariant(value: string) {
   return "badge-coral";
 }
 
-export default function TripCard({ trip }: { trip: Trip }) {
+export default function TripCard({
+  trip,
+  onEdit,
+  onDelete,
+}: {
+  trip: Trip;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
   const travelStyle = trip.travel_style || trip.category;
 
   return (
@@ -92,9 +101,29 @@ export default function TripCard({ trip }: { trip: Trip }) {
           </dd>
         </div>
       </dl>
-      <Link className="detail-button" href={`/trips/${trip.id}`}>
-        Detail
-      </Link>
+      <div className="trip-card-actions">
+        <button
+          aria-label={`Edit trip to ${trip.destination}`}
+          className="trip-action-button edit-trip-button"
+          onClick={onEdit}
+          title="Edit trip"
+          type="button"
+        >
+          <Pencil aria-hidden="true" size={17} strokeWidth={2.4} />
+        </button>
+        <button
+          aria-label={`Delete trip to ${trip.destination}`}
+          className="trip-action-button delete-trip-button"
+          onClick={onDelete}
+          title="Delete trip"
+          type="button"
+        >
+          <Trash2 aria-hidden="true" size={17} strokeWidth={2.4} />
+        </button>
+        <Link className="detail-button" href={`/trips/${trip.id}`}>
+          Detail
+        </Link>
+      </div>
     </article>
   );
 }

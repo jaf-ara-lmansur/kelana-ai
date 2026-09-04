@@ -18,6 +18,12 @@ type UserProfile = {
   total_trips?: number;
 };
 
+function notifySession(type: "expired" | "logout") {
+  window.dispatchEvent(
+    new CustomEvent("kelana:session-notice", { detail: { type } }),
+  );
+}
+
 export default function Navbar({
   backHref,
   backLabel = "Back",
@@ -44,6 +50,7 @@ export default function Navbar({
         });
 
         if (!response.ok) {
+          if (response.status === 401) notifySession("expired");
           throw new Error("Unauthorized");
         }
 
@@ -60,6 +67,7 @@ export default function Navbar({
   }, []);
 
   function handleLogout() {
+    notifySession("logout");
     localStorage.removeItem("access_token");
     localStorage.removeItem("token_type");
     setUser(null);
@@ -105,6 +113,13 @@ export default function Navbar({
                     onClick={() => setMenuOpen(false)}
                   >
                     Trip history
+                  </Link>
+                  <Link
+                    className="dropdown-item"
+                    href="/profile"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Profile
                   </Link>
                   <Link
                     className="dropdown-item"
@@ -173,6 +188,13 @@ export default function Navbar({
                 onClick={() => setMenuOpen(false)}
               >
                 Trip history
+              </Link>
+              <Link
+                className="dropdown-item"
+                href="/profile"
+                onClick={() => setMenuOpen(false)}
+              >
+                Profile
               </Link>
               <Link
                 className="dropdown-item"

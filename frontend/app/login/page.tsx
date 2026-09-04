@@ -32,6 +32,7 @@ export default function LoginPage() {
 
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("token_type", data.token_type ?? "bearer");
+      sessionStorage.setItem("show_welcome_message", "true");
       router.push("/");
     } catch (requestError) {
       setError(

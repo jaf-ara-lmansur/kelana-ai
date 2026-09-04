@@ -7,6 +7,7 @@ import Daycards from "@/components/Daycards";
 import Navbar from "@/components/Navbar";
 import AuthGuard from "@/components/AuthGuard";
 import type { Trip } from "@/types/trip";
+import CreateTripFloat from "@/components/CreateTripFloat";
 
 function splitItinerary(markdown: string) {
   const headings = [...markdown.matchAll(/^##\s+(.+)$/gm)];
@@ -88,6 +89,7 @@ export default function TripDetailPage() {
               </span>
               <h2>Memuat detail trip...</h2>
             </section>
+            <CreateTripFloat />
           </div>
         </main>
       </AuthGuard>
@@ -109,6 +111,7 @@ export default function TripDetailPage() {
               <h2>Trip tidak ditemukan</h2>
               <p>Rencana perjalanan ini tidak tersedia untuk akun saat ini.</p>
             </section>
+            <CreateTripFloat />
           </div>
         </main>
       </AuthGuard>
@@ -159,6 +162,7 @@ export default function TripDetailPage() {
               </p>
             )}
           </section>
+          <CreateTripFloat />
         </div>
       </main>
     </AuthGuard>
