@@ -2,6 +2,7 @@
 
 import { Coins, Mail, MapPinned } from "lucide-react";
 import AuthGuard from "@/components/AuthGuard";
+import ChatbotFloat from "@/components/ChatbotFloat";
 import Navbar from "@/components/Navbar";
 import CreateTripFloat from "@/components/CreateTripFloat";
 import { useEffect, useState } from "react";
@@ -124,6 +125,7 @@ export default function ProfilePage() {
             </section>
           )}
         </div>
+        <ChatbotFloat />
         <CreateTripFloat />
       </main>
     </AuthGuard>

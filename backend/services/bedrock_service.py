@@ -6,7 +6,7 @@ import boto3
 from dotenv import load_dotenv
 
 
-load_dotenv(Path(__file__).resolve().parent / ".env")
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 def configure_bedrock():

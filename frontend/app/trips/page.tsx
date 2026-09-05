@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import TripHistoryClient from "@/app/trips/TripHistoryClient";
 import type { Trip } from "@/types/trip";
 import AuthGuard from "@/components/AuthGuard";
+import ChatbotFloat from "@/components/ChatbotFloat";
 import CreateTripFloat from "@/components/CreateTripFloat";
 
 export default function TripsPage() {
@@ -87,6 +88,7 @@ export default function TripsPage() {
             <TripHistoryClient trips={trips} />
           )}
         </div>
+        <ChatbotFloat />
         <CreateTripFloat />
       </main>
     </AuthGuard>

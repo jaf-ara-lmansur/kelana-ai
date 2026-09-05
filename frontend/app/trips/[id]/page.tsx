@@ -7,6 +7,7 @@ import Daycards from "@/components/Daycards";
 import Navbar from "@/components/Navbar";
 import AuthGuard from "@/components/AuthGuard";
 import type { Trip } from "@/types/trip";
+import ChatbotFloat from "@/components/ChatbotFloat";
 import CreateTripFloat from "@/components/CreateTripFloat";
 
 function splitItinerary(markdown: string) {
@@ -162,6 +163,7 @@ export default function TripDetailPage() {
               </p>
             )}
           </section>
+          <ChatbotFloat />
           <CreateTripFloat />
         </div>
       </main>

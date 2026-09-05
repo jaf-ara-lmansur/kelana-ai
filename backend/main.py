@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 from sqlalchemy import func
-from bedrock_service import get_ai_recommendation
+from services.bedrock_service import get_ai_recommendation
 from services.kb_services import ask_knowledge_base
 from services.trip_service import(
     calculate_daily_budget,
@@ -295,8 +295,11 @@ def update_trip(id: int, request: TripRequest,
 
 @app.post("/api/v1/ask")
 def ask_endpoint(request:QuestionRequest):
-    
-        answer = ask_knowledge_base(request.question)
-        return {"question": request.question,
-                "answer": answer
-                }
+    result = ask_knowledge_base(request.question)
+    return {
+        "question": request.question,
+        "answer": result["answer"],
+        "sources": result["sources"],
+        "average_relevance_score": result["average_relevance_score"],
+        "accuracy_message": result["accuracy_message"],
+    }
